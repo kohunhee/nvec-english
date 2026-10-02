@@ -37,10 +37,15 @@ input[type=text],input[type=tel]{width:100%;border:1.5px solid var(--line);borde
 // 예: const ENDPOINT = 'https://script.google.com/macros/s/...../exec';
 const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzyQqVdpKLOSs9B2aAIuB4ntHc8mbdPTmBE5Y6vsm9Etw7_Bvo6lZS2pZr5Ga0NJxcaow/exec';
 const form=document.getElementById('leadForm');
+let submitting=false;
 form.addEventListener('submit',async(e)=>{
  e.preventDefault();
+ if(submitting)return;
+ submitting=true;
+ const submitBtn=form.querySelector('button[type="submit"],input[type="submit"]');
+ if(submitBtn)submitBtn.disabled=true;
  const goals=[...document.querySelectorAll('input[name="goal"]:checked')].map(x=>x.value);
- if(!goals.length){alert('필요한 영어를 1개 이상 선택해 주세요.');return;}
+ if(!goals.length){alert('필요한 영어를 1개 이상 선택해 주세요.');submitting=false;if(submitBtn)submitBtn.disabled=false;return;}
  const fd=new FormData(form); const data=Object.fromEntries(fd.entries()); data.goal=goals.join(', ');
  data.page_url=location.href; data.referrer=document.referrer; data.created_at=new Date().toISOString();
  const qs=new URLSearchParams(location.search); ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'].forEach(k=>data[k]=qs.get(k)||'');
@@ -48,7 +53,7 @@ form.addEventListener('submit',async(e)=>{
    if(ENDPOINT){await fetch(ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)});}
    else{localStorage.setItem('NVEC_last_lead',JSON.stringify(data));}
    form.style.display='none'; document.getElementById('success').style.display='block'; window.scrollTo({top:0,behavior:'smooth'});
- }catch(err){alert('신청 전송 중 문제가 발생했습니다. 전화 010-2525-3999로 문의해 주세요.');}
+ }catch(err){submitting=false;if(submitBtn)submitBtn.disabled=false;alert('신청 전송 중 문제가 발생했습니다. 전화 010-2525-3999로 문의해 주세요.');}
 });
 </script>
 </body></html>
